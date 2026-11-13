@@ -146,12 +146,13 @@ ul.clean{padding-left:18px} ul.clean li{margin-bottom:.5em}
 <body>
 <div class="progress" id="prog"></div>
 <main>
-  <div class="kicker">Agents in production</div>
+  <div class="kicker">Agents in practice</div>
   <h1>The Two-Judge Loop (VERA): the agent pattern I sketched a month before ACE</h1>
   <p class="dek">Two judges, a proven fix and a human decision. What I got right, what the paper did better, and the design I'd ship today.</p>
   <div class="byline">Diego Fan · AI Engineer · LLMs, RAG &amp; Agents in Production</div>
 
-  <p>On <b>September 6, 2025</b>, I recorded myself on a tablet explaining a design to my team. The request I had received was simple: <i>"break my agent."</i> A colleague had built a RAG agent that was running in Dev, QA and UAT, and I had to find out where it failed. My first version (V0), a single similarity check, did not give satisfying results. So I drew a loop of agents that tests the production agent, judges every answer twice, proposes a better prompt, and tries again.</p>
+  <p>On <b>September 6, 2025</b>, I recorded myself on a tablet explaining a design to my team. The request I had received was simple: <i>"break my agent."</i> A colleague had built a RAG agent that was running in Dev, QA and UAT, and I had to find out where it failed. My first version (V0), a single similarity check, did not give satisfying results. So I drew a loop of agents that tests the real agent, judges every answer twice, proposes a better prompt, and tries again.</p>
+  <p><b>Important:</b> VERA was an offline prototype. It never went to production. I built it to fix specific errors, make the prompt dynamic and get more accurate answers. There were no domain or latency rules; the only cost I tracked was the model cost.</p>
   <p>I call this pattern <b>the Two-Judge Loop</b>, or <b>VERA</b> for its four steps:</p>
   <div class="vera">
     <div><b>V</b><span>Validate</span><small>Embedding judge: is the answer close to the expected one?</small></div>
@@ -167,7 +168,7 @@ ul.clean{padding-left:18px} ul.clean li{margin-bottom:.5em}
     <div class="tl ace"><b>Oct 6, 2025</b>ACE posted on arXiv; later accepted at ICLR 2026.</div>
   </div>
 
-  <p>I'm not claiming I invented ACE. The research community was clearly converging on this idea, and ACE builds directly on earlier work. My point is a different one: <b>if you run agents in production long enough, you get pushed toward this architecture.</b> When a practitioner and a research team land on the same shape independently, that shape is probably right.</p>
+  <p>I'm not claiming I invented ACE. The research community was clearly converging on this idea, and ACE builds directly on earlier work. My point is a different one: <b>if you test a real agent against its failures long enough, you get pushed toward this architecture.</b> When a practitioner and a research team land on the same shape independently, that shape is probably right.</p>
 
   <h2>The original sketch</h2>
   <div class="pair">
@@ -206,7 +207,7 @@ ul.clean{padding-left:18px} ul.clean li{margin-bottom:.5em}
 
       <rect x="6" y="278" width="348" height="44" rx="10" class="bx"/>
       <circle cx="26" cy="300" r="10" class="num"/><text x="26" y="304" class="nt">2</text>
-      <text x="44" y="296" class="t l">Production agent</text><text x="44" y="311" class="s l">answers every question through the real /ask</text>
+      <text x="44" y="296" class="t l">Agent under test</text><text x="44" y="311" class="s l">answers every question through the real /ask</text>
       <path d="M120 322 L92 342" class="ln" marker-end="url(#ar)"/>
       <path d="M240 322 L268 342" class="ln" marker-end="url(#ar)"/>
 
@@ -263,7 +264,7 @@ ul.clean{padding-left:18px} ul.clean li{margin-bottom:.5em}
     <button class="node" data-i="0"><span class="n">1</span><span><span class="t">Q&amp;A generator</span><br><span class="s">Builds the test set: question + expected answer</span></span><span class="ace">test data</span></button>
     <div class="detail" id="d0">An agent generated roughly 1,400 document questions and 1,200 API questions, each with an expected answer, embedded and stored in two MongoDB collections (<code>ask_doc</code> and <code>ask_api</code>).</div>
     <div class="arrow">↓</div>
-    <button class="node" data-i="1"><span class="n">2</span><span><span class="t">Production agent</span><br><span class="s">Answers every question through the real /ask endpoint</span></span><span class="ace">≈ Generator</span></button>
+    <button class="node" data-i="1"><span class="n">2</span><span><span class="t">Agent under test</span><br><span class="s">Answers every question through the real /ask endpoint</span></span><span class="ace">≈ Generator</span></button>
     <div class="detail" id="d1">A script fires each question at the agent running locally on <code>/ask</code>. It tests the real agent with its real routing and retrieval, not a simplified copy.</div>
     <div class="arrow">↓</div>
     <button class="node" data-i="2"><span class="n">3</span><span><span class="t">Judge 1: Validator</span><br><span class="s">Cosine similarity to the expected answer, ≥ 0.70 passes</span></span><span class="ace">metric</span></button>
@@ -304,7 +305,7 @@ ul.clean{padding-left:18px} ul.clean li{margin-bottom:.5em}
     <button class="chip" data-f="ace">Only ACE</button>
   </div>
   <div class="map" id="map">
-    <div class="row" data-k="same"><div class="side"><span class="tag me">VERA</span>Production agent answers via <code>/ask</code></div><div class="mid">⇄</div><div class="side"><span class="tag ace">ACE</span>Generator: answers and flags which playbook bullets helped or misled</div><span class="m same">Same idea</span></div>
+    <div class="row" data-k="same"><div class="side"><span class="tag me">VERA</span>Agent under test answers via <code>/ask</code></div><div class="mid">⇄</div><div class="side"><span class="tag ace">ACE</span>Generator: answers and flags which playbook bullets helped or misled</div><span class="m same">Same idea</span></div>
     <div class="row" data-k="same"><div class="side"><span class="tag me">VERA</span>Evaluator: 👍/👎 and a suggested prompt</div><div class="mid">⇄</div><div class="side"><span class="tag ace">ACE</span>Reflector: extracts lessons from successes and errors, refining over several rounds</div><span class="m same">Same idea</span></div>
     <div class="row" data-k="part"><div class="side"><span class="tag me">VERA</span>Corrector: a whole new prompt, tested by re-answering</div><div class="mid">⇄</div><div class="side"><span class="tag ace">ACE</span>Curator: turns lessons into small delta bullets</div><span class="m part">Partial</span></div>
     <div class="row" data-k="part"><div class="side"><span class="tag me">VERA</span>Validator: cosine similarity ≥ 0.70 against the expected answer</div><div class="mid">⇄</div><div class="side"><span class="tag ace">ACE</span>Feedback signal: ground truth, or execution success/failure</div><span class="m part">Partial</span></div>
@@ -323,7 +324,7 @@ ul.clean{padding-left:18px} ul.clean li{margin-bottom:.5em}
   <div style="overflow-x:auto">
   <table>
     <tr><th></th><th>VERA (Sep 2025)</th><th>ACE (Oct 2025)</th><th>Edge</th></tr>
-    <tr><td>Goal</td><td>Stress-test and fix one production RAG agent</td><td>General framework for self-improving contexts</td><td>—</td></tr>
+    <tr><td>Goal</td><td>Stress-test and fix one RAG agent (offline prototype)</td><td>General framework for self-improving contexts</td><td>—</td></tr>
     <tr><td>Unit of change</td><td>Whole prompt</td><td>Itemized bullets</td><td><span class="tag ace">ACE</span></td></tr>
     <tr><td>Quality signal</td><td>Two judges + expected answers</td><td>Labels or execution feedback</td><td><span class="tag me">VERA</span></td></tr>
     <tr><td>Needs labels?</td><td>Yes (synthetic)</td><td>No, but works better with them</td><td><span class="tag ace">ACE</span></td></tr>
@@ -331,7 +332,7 @@ ul.clean{padding-left:18px} ul.clean li{margin-bottom:.5em}
     <tr><td>Avoids context collapse</td><td>Not addressed</td><td>Core design goal</td><td><span class="tag ace">ACE</span></td></tr>
     <tr><td>Human control</td><td>Team approves</td><td>Autonomous</td><td><span class="tag me">VERA</span></td></tr>
     <tr><td>Learns at test time</td><td>No</td><td>Yes (online mode)</td><td><span class="tag ace">ACE</span></td></tr>
-    <tr><td>Evidence</td><td>Internal test, no published numbers</td><td>Peer-reviewed benchmarks</td><td><span class="tag ace">ACE</span></td></tr>
+    <tr><td>Evidence</td><td>Offline prototype, no published numbers</td><td>Peer-reviewed benchmarks</td><td><span class="tag ace">ACE</span></td></tr>
   </table>
   </div>
 
@@ -373,7 +374,7 @@ ul.clean{padding-left:18px} ul.clean li{margin-bottom:.5em}
   <p>After I posted about ACE, a commenter described letting an agent rewrite its own instructions: it kept the workaround, deleted the warning, and taught the next run to do the same.</p>
   <blockquote>A self-improving loop optimizes for whatever it can measure. If a workaround passes the metric, it gets reinforced, and the warning that slowed it down looks like noise.</blockquote>
   <p>Delta updates prevent context collapse. They do not prevent learning the wrong lesson. That needs governance, and it is where a production design has to go beyond the paper.</p>
-  <p>Looking back, my loop never edited production by itself. It proposed a prompt, proved it on the test set, and left the decision to the team. At the time, that just felt like the polite thing to do with someone else's agent. Now I think it is the main design principle.</p>
+  <p>Looking back, my loop never changed the real agent by itself. It proposed a prompt, proved it on the test set, and left the decision to the team. At the time, that just felt like the polite thing to do with someone else's agent. Now I think it is the main design principle.</p>
 
   <h2>The design I'd ship today</h2>
   <p>My September loop plus ACE's playbook, with guardrails:</p>
