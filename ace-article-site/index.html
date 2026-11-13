@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Two-Judge Loop (VERA): A Month Before ACE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f5f0; --ink:#1d1d1b; --muted:#66645e; --line:#dcd8cf; --card:#ffffff;
+  --accent:#c2410c; --accent-soft:#fdeee5; --blue:#1e5aa8; --blue-soft:#e6eef9; --green:#2f7d4f; --green-soft:#e5f3ea; --red:#b42318; --red-soft:#fbe9e7;
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#151514;--ink:#ecebe6;--muted:#a3a19a;--line:#33322f;--card:#1f1f1d;--accent:#f0804a;--accent-soft:#3a2418;--blue:#7fb0f0;--blue-soft:#1a2a40;--green:#6fcf97;--green-soft:#17301f;--red:#f08070;--red-soft:#3a1d1a}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:720px;margin:0 auto;padding:28px 20px 80px}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;line-height:1.2;letter-spacing:-.01em}
+h1{font-size:clamp(30px,6vw,46px);margin:.2em 0 .4em}
+h2{font-size:clamp(23px,4.4vw,30px);margin:2.2em 0 .5em}
+h3{font-size:19px;margin:1.4em 0 .3em}
+p{margin:0 0 1em}
+.kicker{font:600 12px/1 Inter;text-transform:uppercase;letter-spacing:.12em;color:var(--accent)}
+.dek{font-size:19px;color:var(--muted);margin-bottom:1.2em}
+.byline{font-size:14px;color:var(--muted);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 0;margin-bottom:28px}
+code,.mono{font-family:"JetBrains Mono",monospace;font-size:.86em}
+figure{margin:26px 0}
+figure img{width:100%;border-radius:10px;border:1px solid var(--line);display:block;background:#fff}
+figcaption{font-size:13.5px;color:var(--muted);margin-top:8px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.pair{grid-template-columns:1fr}}
+blockquote{margin:24px 0;padding:4px 0 4px 18px;border-left:3px solid var(--accent);font-family:Fraunces,serif;font-size:21px;line-height:1.4}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.timeline{position:relative;margin:22px 0;padding-left:22px}
+.timeline:before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.tl{position:relative;margin-bottom:14px}
+.tl:before{content:"";position:absolute;left:-21px;top:7px;width:12px;height:12px;border-radius:50%;background:var(--card);border:2px solid var(--muted)}
+.tl.me:before{background:var(--accent);border-color:var(--accent)}
+.tl.ace:before{background:var(--blue);border-color:var(--blue)}
+.tl b{display:block;font-size:13px;color:var(--muted);font-weight:600}
+/* pipeline */
+.pipe{display:flex;flex-direction:column;gap:8px;margin:18px 0}
+.node{all:unset;cursor:pointer;display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;transition:.2s}
+.node:hover{border-color:var(--accent)}
+.node.on{border-color:var(--accent);background:var(--accent-soft)}
+.node .n{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:600 13px Inter;background:var(--ink);color:var(--bg)}
+.node .t{font-weight:600}
+.node .s{font-size:13.5px;color:var(--muted)}
+.node .ace{margin-left:auto;font:500 11px Inter;color:var(--blue);background:var(--blue-soft);padding:3px 8px;border-radius:99px;white-space:nowrap}
+.arrow{text-align:center;color:var(--muted);font-size:14px;line-height:1}
+.detail{border-left:3px solid var(--accent);padding:6px 0 6px 14px;margin:6px 0 4px;font-size:15.5px;display:none}
+.detail.on{display:block}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+button.btn{font:600 14px Inter;border:1px solid var(--ink);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:99px;cursor:pointer}
+button.btn.ghost{background:transparent;color:var(--ink)}
+/* simulator */
+.sim-row{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.sim-row:last-child{border-bottom:0}
+.pill{font:600 12px Inter;padding:2px 8px;border-radius:99px}
+.pass{background:var(--green-soft);color:var(--green)}
+.fail{background:var(--red-soft);color:var(--red)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.meter{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 2px}
+.meter i{display:block;height:100%;background:var(--accent);transition:width .35s}
+.note{font-size:13px;color:var(--muted)}
+/* tabs */
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-top:14px;overflow-x:auto}
+.tab{all:unset;cursor:pointer;padding:10px 12px;font:600 14px Inter;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.tab.on{color:var(--ink);border-color:var(--accent)}
+.panel{display:none;padding-top:14px}
+.panel.on{display:block}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+td:first-child{font-weight:600;width:28%}
+.tag{display:inline-block;font:600 11px Inter;padding:2px 7px;border-radius:6px;margin-right:4px}
+.tag.me{background:var(--accent-soft);color:var(--accent)}
+.tag.ace{background:var(--blue-soft);color:var(--blue)}
+pre{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto;font:13px/1.55 "JetBrains Mono",monospace}
+.k{color:var(--blue)} .str{color:var(--green)} .c{color:var(--muted)}
+ul.clean{padding-left:18px} ul.clean li{margin-bottom:.5em}
+.sources{font-size:14px;color:var(--muted)}
+.sources a{color:var(--blue)}
+.redraw{max-width:480px;margin:10px auto 30px}
+.redraw svg{width:100%;height:auto;display:block;font-family:Inter,sans-serif}
+.redraw .lab{font:600 10.5px Inter;letter-spacing:.1em;fill:var(--muted)}
+.redraw .lab.acc{fill:var(--accent)}
+.redraw .zone{fill:none;stroke:var(--line);stroke-width:1.5;stroke-dasharray:5 4}
+.redraw .bx{fill:var(--card);stroke:var(--line);stroke-width:1.2}
+.redraw .bx.blue{fill:var(--blue-soft);stroke:var(--blue)}
+.redraw .bx.acc{fill:var(--accent-soft);stroke:var(--accent)}
+.redraw .bx.ok{fill:var(--green-soft);stroke:var(--green)}
+.redraw .bx.bad{fill:var(--red-soft);stroke:var(--red)}
+.redraw .dia{fill:var(--card);stroke:var(--ink);stroke-width:1.2}
+.redraw .team{fill:var(--ink)}
+.redraw .t{font:600 12px Inter;fill:var(--ink);text-anchor:middle}
+.redraw .s{font:400 10px Inter;fill:var(--muted);text-anchor:middle}
+.redraw .l{text-anchor:start}
+.redraw .g{fill:var(--green);font-weight:600}
+.redraw .r{fill:var(--red);font-weight:600}
+.redraw .mono2{font-family:"JetBrains Mono",monospace;font-size:11.5px}
+.redraw .num{fill:var(--ink)}
+.redraw .nt{font:600 10.5px Inter;fill:var(--bg);text-anchor:middle}
+.redraw .inv{fill:var(--bg)}
+.redraw .num.inv{fill:var(--bg)}
+.redraw .nt.inv{fill:var(--ink)}
+.redraw .ln{stroke:var(--muted);stroke-width:1.3;fill:none}
+.redraw .dash{stroke-dasharray:4 3}
+.redraw .ah{fill:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px}
+.chip{all:unset;cursor:pointer;font:600 13px Inter;padding:6px 12px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.map{display:flex;flex-direction:column;gap:8px}
+.row{position:relative;display:grid;grid-template-columns:1fr 22px 1fr;gap:6px;align-items:start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:30px 12px 12px;font-size:14px;line-height:1.45}
+.row .mid{text-align:center;color:var(--muted);padding-top:18px}
+.row .side .tag{display:table;margin-bottom:4px}
+.row .none{color:var(--muted);font-style:italic;padding-top:22px}
+.row .m{position:absolute;top:8px;right:10px;font:600 11px Inter;padding:2px 8px;border-radius:99px}
+.m.same{background:var(--green-soft);color:var(--green)}
+.m.part{background:#fff4d6;color:#8a6200}
+@media (prefers-color-scheme: dark){.m.part{background:#3a3016;color:#e8c46a}}
+.m.mine{background:var(--accent-soft);color:var(--accent)}
+.m.ace{background:var(--blue-soft);color:var(--blue)}
+.row.hide{display:none}
+.bars{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;font-size:13px}
+.bars .bl{grid-column:1/-1;font-weight:600;margin-top:6px}
+.bt{height:12px;background:var(--line);border-radius:99px;overflow:hidden}
+.bt i{display:block;height:100%;border-radius:99px}
+.b0{background:var(--muted)} .b1{background:var(--blue)}
+.bv{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--muted);white-space:nowrap}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+@media(max-width:600px){.two{grid-template-columns:1fr}}
+.two .clean{font-size:15px;margin:0}
+.vera{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 22px}
+@media(max-width:560px){.vera{grid-template-columns:1fr 1fr}}
+.vera div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:2px}
+.vera b{font:700 30px Fraunces,serif;color:var(--accent);line-height:1}
+.vera span{font-weight:600;font-size:15px}
+.vera small{font-size:12.5px;color:var(--muted);line-height:1.4}
+.progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);width:0;z-index:9}
+</style>
+</head>
+<body>
+<div class="progress" id="prog"></div>
+<main>
+  <div class="kicker">Agents in production</div>
+  <h1>The Two-Judge Loop (VERA): the agent pattern I sketched a month before ACE</h1>
+  <p class="dek">Two judges, a proven fix and a human decision. What I got right, what the paper did better, and the design I'd ship today.</p>
+  <div class="byline">Diego Fan · AI Engineer · LLMs, RAG &amp; Agents in Production</div>
+
+  <p>On <b>September 6, 2025</b>, I recorded myself on a tablet explaining a design to my team. The request I had received was simple: <i>"break my agent."</i> A colleague had built a RAG agent that was running in Dev, QA and UAT, and I had to find out where it failed. My first version (V0), a single similarity check, did not give satisfying results. So I drew a loop of agents that tests the production agent, judges every answer twice, proposes a better prompt, and tries again.</p>
+  <p>I call this pattern <b>the Two-Judge Loop</b>, or <b>VERA</b> for its four steps:</p>
+  <div class="vera">
+    <div><b>V</b><span>Validate</span><small>Embedding judge: is the answer close to the expected one?</small></div>
+    <div><b>E</b><span>Evaluate</span><small>LLM judge: is it actually right? If not, suggest a better prompt.</small></div>
+    <div><b>R</b><span>Repair</span><small>Re-answer with the new prompt and face both judges again.</small></div>
+    <div><b>A</b><span>Approve</span><small>The team decides whether the change ships.</small></div>
+  </div>
+  <p>On <b>October 6, 2025</b>, researchers from Stanford, SambaNova and UC Berkeley published <i>Agentic Context Engineering</i> (ACE). Its core idea: a Generator, a Reflector and a Curator that turn an agent's context into an evolving playbook. Reading it felt very familiar.</p>
+
+  <div class="timeline">
+    <div class="tl"><b>2023 – 2025</b>Reflexion, TextGrad, Dynamic Cheatsheet and GEPA show that natural-language feedback can improve LLM systems without touching weights.</div>
+    <div class="tl me"><b>Sep 6, 2025</b>My tablet sketch of the Two-Judge Loop: a test flow with a Q&amp;A generator, two judges (embedding + LLM), an evaluator that suggests prompts and a corrector that retries.</div>
+    <div class="tl ace"><b>Oct 6, 2025</b>ACE posted on arXiv; later accepted at ICLR 2026.</div>
+  </div>
+
+  <p>I'm not claiming I invented ACE. The research community was clearly converging on this idea, and ACE builds directly on earlier work. My point is a different one: <b>if you run agents in production long enough, you get pushed toward this architecture.</b> When a practitioner and a research team land on the same shape independently, that shape is probably right.</p>
+
+  <h2>The original sketch</h2>
+  <div class="pair">
+    <figure>
+      <img src="img/sketch-architecture.jpg" alt="Hand-drawn architecture: current flow with agent, RAG routers to Doc and API, LangChain/LangGraph, MLflow, FastAPI /ask endpoint; below, a test flow with generation, validator, evaluator and corrector agents">
+      <figcaption>Top: the current flow (Dev, QA, UAT). Bottom: the test flow I built to stress-test it.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/sketch-dataset.jpg" alt="Hand-drawn JSON schema with question, expected_answer and agent_answer fields, split between API and document questions">
+      <figcaption>Each test record: question, expected answer and the agent's answer, kept in separate collections for API and document questions.</figcaption>
+    </figure>
+  </div>
+
+  <figure class="redraw">
+    <svg viewBox="0 0 360 820" role="img" aria-label="Redrawn diagram: current flow and test flow">
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker></defs>
+      <text x="10" y="17" class="lab">CURRENT FLOW · DEV / QA / UAT</text>
+      <rect x="6" y="26" width="348" height="146" rx="12" class="zone"/>
+      <rect x="16" y="38" width="96" height="36" rx="8" class="bx"/><text x="64" y="54" class="t">FastAPI</text><text x="64" y="67" class="s">POST /ask</text>
+      <rect x="132" y="38" width="96" height="36" rx="8" class="bx"/><text x="180" y="54" class="t">Agent</text><text x="180" y="67" class="s">LangGraph</text>
+      <rect x="248" y="38" width="96" height="36" rx="8" class="bx"/><text x="296" y="54" class="t">Router</text><text x="296" y="67" class="s">doc or API?</text>
+      <line x1="112" y1="56" x2="130" y2="56" class="ln" marker-end="url(#ar)"/>
+      <line x1="228" y1="56" x2="246" y2="56" class="ln" marker-end="url(#ar)"/>
+      <rect x="196" y="94" width="70" height="36" rx="8" class="bx"/><text x="231" y="110" class="t">Doc</text><text x="231" y="123" class="s">MongoDB</text>
+      <rect x="274" y="94" width="70" height="36" rx="8" class="bx"/><text x="309" y="110" class="t">API</text><text x="309" y="123" class="s">MongoDB</text>
+      <path d="M290 74 L240 92" class="ln" marker-end="url(#ar)"/>
+      <path d="M300 74 L306 92" class="ln" marker-end="url(#ar)"/>
+      <rect x="16" y="94" width="170" height="36" rx="8" class="bx"/><text x="101" y="110" class="t">LangChain</text><text x="101" y="123" class="s">split &amp; chunk documents</text>
+      <rect x="16" y="138" width="328" height="26" rx="8" class="bx blue"/><text x="180" y="155" class="t">MLflow · tracing &amp; observability</text>
+
+      <text x="10" y="200" class="lab acc">TEST FLOW · THE TWO-JUDGE LOOP (VERA)</text>
+      <rect x="6" y="210" width="348" height="50" rx="10" class="bx"/>
+      <circle cx="26" cy="235" r="10" class="num"/><text x="26" y="239" class="nt">1</text>
+      <text x="44" y="231" class="t l">Q&amp;A generator</text><text x="44" y="246" class="s l">~1,400 doc + ~1,200 API questions → ask_doc · ask_api</text>
+      <line x1="180" y1="260" x2="180" y2="276" class="ln" marker-end="url(#ar)"/>
+
+      <rect x="6" y="278" width="348" height="44" rx="10" class="bx"/>
+      <circle cx="26" cy="300" r="10" class="num"/><text x="26" y="304" class="nt">2</text>
+      <text x="44" y="296" class="t l">Production agent</text><text x="44" y="311" class="s l">answers every question through the real /ask</text>
+      <path d="M120 322 L92 342" class="ln" marker-end="url(#ar)"/>
+      <path d="M240 322 L268 342" class="ln" marker-end="url(#ar)"/>
+
+      <rect x="6" y="344" width="170" height="54" rx="10" class="bx"/>
+      <circle cx="24" cy="362" r="9" class="num"/><text x="24" y="366" class="nt">3</text>
+      <text x="38" y="366" class="t l">Validator</text><text x="91" y="388" class="s">cosine similarity ≥ 0.70</text>
+      <rect x="184" y="344" width="170" height="54" rx="10" class="bx"/>
+      <circle cx="202" cy="362" r="9" class="num"/><text x="202" y="366" class="nt">4</text>
+      <text x="216" y="366" class="t l">Evaluator (LLM)</text><text x="269" y="388" class="s">👍/👎 + suggested prompt</text>
+      <path d="M91 398 L150 420" class="ln" marker-end="url(#ar)"/>
+      <path d="M269 398 L210 420" class="ln" marker-end="url(#ar)"/>
+
+      <path d="M180 420 L246 446 L180 472 L114 446 Z" class="dia"/><text x="180" y="450" class="t">Both pass?</text>
+      <path d="M114 446 H85 V493" class="ln" marker-end="url(#ar)"/><text x="98" y="440" class="s g">yes</text>
+      <path d="M246 446 H275 V493" class="ln" marker-end="url(#ar)"/><text x="262" y="440" class="s r">no</text>
+
+      <rect x="6" y="495" width="158" height="40" rx="10" class="bx ok"/><text x="85" y="519" class="t">✓ Keep agent answer</text>
+      <rect x="196" y="495" width="158" height="50" rx="10" class="bx acc"/>
+      <circle cx="214" cy="512" r="9" class="num"/><text x="214" y="516" class="nt">5</text>
+      <text x="228" y="516" class="t l">Corrector</text><text x="275" y="535" class="s">re-answers with new prompt</text>
+      <path d="M328 495 V400" class="ln dash" marker-end="url(#ar)"/>
+      <text x="343" y="447" class="s" transform="rotate(-90 343 447)">re-judged</text>
+
+      <line x1="275" y1="545" x2="275" y2="561" class="ln" marker-end="url(#ar)"/>
+      <path d="M275 563 L333 585 L275 607 L217 585 Z" class="dia"/><text x="275" y="589" class="t">Both pass?</text>
+      <path d="M217 585 H166" class="ln" marker-end="url(#ar)"/><text x="192" y="578" class="s g">yes</text>
+      <line x1="275" y1="607" x2="275" y2="633" class="ln" marker-end="url(#ar)"/><text x="284" y="624" class="s r l">no</text>
+
+      <rect x="6" y="565" width="158" height="40" rx="10" class="bx ok"/><text x="85" y="589" class="t">✓ Keep corrector answer</text>
+      <rect x="196" y="635" width="158" height="40" rx="10" class="bx bad"/><text x="275" y="659" class="t">↩ Use expected answer</text>
+      <line x1="85" y1="535" x2="85" y2="563" class="ln"/>
+      <line x1="85" y1="605" x2="85" y2="698" class="ln" marker-end="url(#ar)"/>
+      <line x1="275" y1="675" x2="275" y2="698" class="ln" marker-end="url(#ar)"/>
+
+      <rect x="6" y="700" width="170" height="40" rx="10" class="bx ok"/><text x="91" y="717" class="t mono2">doc_correct</text><text x="91" y="731" class="s">good answers</text>
+      <rect x="184" y="700" width="170" height="40" rx="10" class="bx bad"/><text x="269" y="717" class="t mono2">doc_fine_tuner</text><text x="269" y="731" class="s">needs improvement</text>
+      <line x1="91" y1="740" x2="91" y2="764" class="ln" marker-end="url(#ar)"/>
+      <line x1="269" y1="740" x2="269" y2="764" class="ln" marker-end="url(#ar)"/>
+
+      <rect x="6" y="766" width="348" height="46" rx="10" class="team"/>
+      <circle cx="26" cy="789" r="10" class="num inv"/><text x="26" y="793" class="nt inv">6</text>
+      <text x="44" y="785" class="t l inv">The team decides</text><text x="44" y="801" class="s l inv">adopt the suggested prompt, or not</text>
+    </svg>
+    <figcaption>The same sketch, redrawn. Steps 3 and 4 are the two judges; the dashed line is the corrector being judged again.</figcaption>
+  </figure>
+
+  <h3>The current flow</h3>
+  <p>A LangChain/LangGraph agent behind a FastAPI <code>/ask</code> endpoint. A router sends each question either to a <b>document</b> connector or to an <b>API</b> connector in MongoDB, where LangChain handles splitting and chunking. MLflow is there mostly for observability: it traces what the user asked and what the agent did.</p>
+
+  <h3>The test flow</h3>
+  <p>A separate pipeline that never answers real users. It generates its own test set, fires it at the agent, judges every answer twice, and tries to fix what fails. Tap each step:</p>
+
+  <div class="pipe" id="pipe">
+    <button class="node" data-i="0"><span class="n">1</span><span><span class="t">Q&amp;A generator</span><br><span class="s">Builds the test set: question + expected answer</span></span><span class="ace">test data</span></button>
+    <div class="detail" id="d0">An agent generated roughly 1,400 document questions and 1,200 API questions, each with an expected answer, embedded and stored in two MongoDB collections (<code>ask_doc</code> and <code>ask_api</code>).</div>
+    <div class="arrow">↓</div>
+    <button class="node" data-i="1"><span class="n">2</span><span><span class="t">Production agent</span><br><span class="s">Answers every question through the real /ask endpoint</span></span><span class="ace">≈ Generator</span></button>
+    <div class="detail" id="d1">A script fires each question at the agent running locally on <code>/ask</code>. It tests the real agent with its real routing and retrieval, not a simplified copy.</div>
+    <div class="arrow">↓</div>
+    <button class="node" data-i="2"><span class="n">3</span><span><span class="t">Judge 1: Validator</span><br><span class="s">Cosine similarity to the expected answer, ≥ 0.70 passes</span></span><span class="ace">metric</span></button>
+    <div class="detail" id="d2">This was my V0, and on its own it was not enough. Similarity tells you whether two answers <i>look</i> alike, not whether the answer is right.</div>
+    <div class="arrow">↓</div>
+    <button class="node" data-i="3"><span class="n">4</span><span><span class="t">Judge 2: Evaluator</span><br><span class="s">LLM gives 👍 or 👎, then suggests a better prompt</span></span><span class="ace">≈ Reflector</span></button>
+    <div class="detail" id="d3">"Just a prompt", but the most useful piece. It judges each answer and writes a suggested prompt into a new MongoDB field. Diagnosing and proposing is exactly the Reflector's job in ACE.</div>
+    <div class="arrow">↓</div>
+    <button class="node" data-i="4"><span class="n">5</span><span><span class="t">Corrector</span><br><span class="s">Re-answers with the suggested prompt, then gets judged again</span></span><span class="ace">≈ Curator</span></button>
+    <div class="detail" id="d4">It takes the suggested prompt, produces new answers, and sends them back through <i>both</i> judges. The suggestion only counts if it actually produces better answers. ACE's Curator, by contrast, merges small itemized lessons into the context.</div>
+    <div class="arrow">↓</div>
+    <button class="node" data-i="5"><span class="n">6</span><span><span class="t">Decision &amp; routing</span><br><span class="s">Three-way fallback, then sort the results</span></span><span class="ace">my addition</span></button>
+    <div class="detail" id="d5">If the agent passes both judges, keep its answer. If not, but the corrector passes both, keep the corrector's answer. Otherwise, fall back to the expected answer. Good answers go to <code>doc_correct</code>; weak ones go to <code>doc_fine_tuner</code>. And the team, not the loop, decides whether to adopt the changes.</div>
+  </div>
+  <div class="controls"><button class="btn" id="play">▶ Play the loop</button><button class="btn ghost" id="reset">Reset</button></div>
+
+  <h2>Why one judge wasn't enough</h2>
+  <p>Drag the threshold, then turn on the second judge. Too low and bad answers pass; too high and correct answers worded differently fail. Watch the last row:</p>
+  <div class="card">
+    <label class="mono" for="thr">threshold = <span id="thrv">0.70</span></label>
+    <input type="range" id="thr" min="0.5" max="0.95" step="0.01" value="0.70">
+    <label style="display:flex;gap:8px;align-items:center;font-size:14px;margin:6px 0"><input type="checkbox" id="judge"> Add Judge 2 (LLM evaluator)</label>
+    <div id="sim"></div>
+    <div class="meter"><i id="bar"></i></div>
+    <div class="note"><span id="rate"></span> · Illustrative examples, not real data.</div>
+  </div>
+  <p style="margin-top:14px">A confident answer with the wrong number can look very similar to the right one. Similarity alone passes it. That is what happened to my V0, and it is why I added an LLM evaluator: an answer has to pass both judges.</p>
+
+  <h2>The Two-Judge Loop vs ACE</h2>
+  <p>Put the two side by side and the overlap is clear: an agent that answers, a critic that explains what went wrong, and a component that turns that critique into better instructions. The differences are in <i>how</i> the instructions change and <i>who</i> approves the change.</p>
+
+  <h3>Step by step</h3>
+  <div class="chips" id="chips">
+    <button class="chip on" data-f="all">All</button>
+    <button class="chip" data-f="same">Same idea</button>
+    <button class="chip" data-f="part">Partial</button>
+    <button class="chip" data-f="mine">Only VERA</button>
+    <button class="chip" data-f="ace">Only ACE</button>
+  </div>
+  <div class="map" id="map">
+    <div class="row" data-k="same"><div class="side"><span class="tag me">VERA</span>Production agent answers via <code>/ask</code></div><div class="mid">⇄</div><div class="side"><span class="tag ace">ACE</span>Generator: answers and flags which playbook bullets helped or misled</div><span class="m same">Same idea</span></div>
+    <div class="row" data-k="same"><div class="side"><span class="tag me">VERA</span>Evaluator: 👍/👎 and a suggested prompt</div><div class="mid">⇄</div><div class="side"><span class="tag ace">ACE</span>Reflector: extracts lessons from successes and errors, refining over several rounds</div><span class="m same">Same idea</span></div>
+    <div class="row" data-k="part"><div class="side"><span class="tag me">VERA</span>Corrector: a whole new prompt, tested by re-answering</div><div class="mid">⇄</div><div class="side"><span class="tag ace">ACE</span>Curator: turns lessons into small delta bullets</div><span class="m part">Partial</span></div>
+    <div class="row" data-k="part"><div class="side"><span class="tag me">VERA</span>Validator: cosine similarity ≥ 0.70 against the expected answer</div><div class="mid">⇄</div><div class="side"><span class="tag ace">ACE</span>Feedback signal: ground truth, or execution success/failure</div><span class="m part">Partial</span></div>
+    <div class="row" data-k="part"><div class="side"><span class="tag me">VERA</span>Q&amp;A generator: ~2,600 synthetic test questions</div><div class="mid">⇄</div><div class="side"><span class="tag ace">ACE</span>Offline mode: a training split, revisited for several epochs</div><span class="m part">Partial</span></div>
+    <div class="row" data-k="mine"><div class="side"><span class="tag me">VERA</span>Corrector's answers judged again by both judges</div><div class="mid">—</div><div class="side none">No per-update test before merging</div><span class="m mine">Only VERA</span></div>
+    <div class="row" data-k="mine"><div class="side"><span class="tag me">VERA</span>Three-way fallback: agent → corrector → expected answer</div><div class="mid">—</div><div class="side none">No fallback answer</div><span class="m mine">Only VERA</span></div>
+    <div class="row" data-k="mine"><div class="side"><span class="tag me">VERA</span><code>doc_correct</code> / <code>doc_fine_tuner</code> collections</div><div class="mid">—</div><div class="side none">Avoids fine-tuning; the context is the memory</div><span class="m mine">Only VERA</span></div>
+    <div class="row" data-k="mine"><div class="side"><span class="tag me">VERA</span>The team decides whether to adopt</div><div class="mid">—</div><div class="side none">The loop updates the context itself</div><span class="m mine">Only VERA</span></div>
+    <div class="row" data-k="ace"><div class="side none">One prompt, no item-level tracking</div><div class="mid">—</div><div class="side"><span class="tag ace">ACE</span>Bullets with a unique ID and helpful/harmful counters</div><span class="m ace">Only ACE</span></div>
+    <div class="row" data-k="ace"><div class="side none">The prompt is replaced as a whole</div><div class="mid">—</div><div class="side"><span class="tag ace">ACE</span>Deterministic, non-LLM merge with embedding de-duplication</div><span class="m ace">Only ACE</span></div>
+    <div class="row" data-k="ace"><div class="side none">Runs as an offline test</div><div class="mid">—</div><div class="side"><span class="tag ace">ACE</span>Online mode: updates the context after each new sample</div><span class="m ace">Only ACE</span></div>
+  </div>
+  <p class="note" id="mapcount"></p>
+
+  <h3>Dimension by dimension</h3>
+  <div style="overflow-x:auto">
+  <table>
+    <tr><th></th><th>VERA (Sep 2025)</th><th>ACE (Oct 2025)</th><th>Edge</th></tr>
+    <tr><td>Goal</td><td>Stress-test and fix one production RAG agent</td><td>General framework for self-improving contexts</td><td>—</td></tr>
+    <tr><td>Unit of change</td><td>Whole prompt</td><td>Itemized bullets</td><td><span class="tag ace">ACE</span></td></tr>
+    <tr><td>Quality signal</td><td>Two judges + expected answers</td><td>Labels or execution feedback</td><td><span class="tag me">VERA</span></td></tr>
+    <tr><td>Needs labels?</td><td>Yes (synthetic)</td><td>No, but works better with them</td><td><span class="tag ace">ACE</span></td></tr>
+    <tr><td>Change is proven before use</td><td>Yes, re-answered and re-judged</td><td>No per-update check</td><td><span class="tag me">VERA</span></td></tr>
+    <tr><td>Avoids context collapse</td><td>Not addressed</td><td>Core design goal</td><td><span class="tag ace">ACE</span></td></tr>
+    <tr><td>Human control</td><td>Team approves</td><td>Autonomous</td><td><span class="tag me">VERA</span></td></tr>
+    <tr><td>Learns at test time</td><td>No</td><td>Yes (online mode)</td><td><span class="tag ace">ACE</span></td></tr>
+    <tr><td>Evidence</td><td>Internal test, no published numbers</td><td>Peer-reviewed benchmarks</td><td><span class="tag ace">ACE</span></td></tr>
+  </table>
+  </div>
+
+  <h3>What ACE reported</h3>
+  <div class="card">
+    <div class="bars">
+      <div class="bl">AppWorld agent, offline (avg.)</div>
+      <div class="bt"><i style="width:42.4%" class="b0"></i></div><div class="bv">42.4 base</div>
+      <div class="bt"><i style="width:59.4%" class="b1"></i></div><div class="bv">59.4 + ACE</div>
+      <div class="bl">Finance, offline with labels (avg.)</div>
+      <div class="bt"><i style="width:69.1%" class="b0"></i></div><div class="bv">69.1 base</div>
+      <div class="bt"><i style="width:81.9%" class="b1"></i></div><div class="bv">81.9 + ACE</div>
+    </div>
+    <p class="note" style="margin:10px 0 0">Scores as reported in the paper. ACE also reports 86.9% lower adaptation latency on average than existing adaptive methods.</p>
+  </div>
+
+  <h3>The detail that surprised me</h3>
+  <p>The paper is honest about its weak spot: everything depends on the quality of the feedback. On the finance tasks <b>without</b> ground-truth labels, both ACE and Dynamic Cheatsheet got worse, and the context could be polluted by misleading signals.</p>
+  <p>That is the exact problem my two judges and expected answers were built for. VERA cares most about <i>whether an answer is right</i>; ACE cares most about <i>how to remember what was learned</i>. The two halves fit together.</p>
+
+  <div class="two">
+    <div class="card"><h3 style="margin-top:0;color:var(--blue)">What ACE did better</h3>
+    <ul class="clean">
+      <li><b>Small updates, not whole prompts.</b> Repeated rewriting erodes details over time (<i>context collapse</i>). Itemized bullets keep what already works.</li>
+      <li><b>Lessons, not just answers.</b> My loop saved answers and pointed weak ones toward fine-tuning. ACE saves the lesson behind each failure, so no retraining is needed.</li>
+      <li><b>Item-level tracking.</b> Helpful/harmful counters show which rule earns its place.</li>
+      <li><b>Fewer labels.</b> My expected answers came from another agent; if it was wrong, both judges measured against a wrong reference.</li>
+    </ul></div>
+    <div class="card"><h3 style="margin-top:0;color:var(--accent)">What VERA did better</h3>
+    <ul class="clean">
+      <li><b>Two judges.</b> Similarity catches drift; an LLM judge catches wrong facts.</li>
+      <li><b>Prove the fix.</b> A suggested prompt only counts after it produces better answers and passes both judges again.</li>
+      <li><b>A safe fallback.</b> If nothing passes, return a known-good answer.</li>
+      <li><b>A human decision.</b> The loop proposed; the team decided.</li>
+    </ul></div>
+  </div>
+
+  <h2>The failure mode nobody draws</h2>
+  <p>After I posted about ACE, a commenter described letting an agent rewrite its own instructions: it kept the workaround, deleted the warning, and taught the next run to do the same.</p>
+  <blockquote>A self-improving loop optimizes for whatever it can measure. If a workaround passes the metric, it gets reinforced, and the warning that slowed it down looks like noise.</blockquote>
+  <p>Delta updates prevent context collapse. They do not prevent learning the wrong lesson. That needs governance, and it is where a production design has to go beyond the paper.</p>
+  <p>Looking back, my loop never edited production by itself. It proposed a prompt, proved it on the test set, and left the decision to the team. At the time, that just felt like the polite thing to do with someone else's agent. Now I think it is the main design principle.</p>
+
+  <h2>The design I'd ship today</h2>
+  <p>My September loop plus ACE's playbook, with guardrails:</p>
+  <pre><span class="c"># playbook.yaml</span>
+<span class="k">human_rules:</span>            <span class="c"># owned by the team, read-only to agents</span>
+  - <span class="str">"Never expose internal API keys in answers"</span>
+  - <span class="str">"Auth questions always route to ask_doc"</span>
+<span class="k">agent_tactics:</span>          <span class="c"># agent may add/edit</span>
+  - id: t-042
+    text: <span class="str">"For pricing questions, call ask_api before ask_doc"</span>
+    source_run: <span class="str">mlflow:run/8f3c…</span>
+    helpful: 14
+    harmful: 1
+<span class="k">policy:</span>
+  additions: auto_if_ab_wins
+  deletions: human_review     <span class="c"># removing anything needs a person</span>
+  touches_human_rules: blocked</pre>
+  <ul class="clean">
+    <li><b>Two zones.</b> Team decisions are read-only. Agent tactics are editable.</li>
+    <li><b>Provenance.</b> Every tactic points to the run where it was learned.</li>
+    <li><b>Asymmetric permissions.</b> Adding is cheap. Deleting needs a person.</li>
+    <li><b>Two judges plus a release gate.</b> Nothing reaches production without passing both judges and beating the current version in the test flow.</li>
+    <li><b>Independent references.</b> Expected answers checked by a person, or produced by a different model than the one being tested.</li>
+  </ul>
+
+  <h2>Takeaway</h2>
+  <p>Before you change the model, look at what the agent is reading. Then build a loop that improves it, and make sure every change has a reason, a score and an owner.</p>
+  <p><b>Would you let your agent delete rules from its own playbook?</b></p>
+
+  <h2 style="font-size:20px">Sources</h2>
+  <div class="sources">
+    <p><a href="https://arxiv.org/abs/2510.04618">Zhang et al., Agentic Context Engineering: Evolving Contexts for Self-Improving Language Models (arXiv 2510.04618)</a><br>
+    <a href="https://github.com/ace-agent/ace">ACE code on GitHub</a><br>
+    Sketch images: frames from my own recordings, Sep 6, 2025.</p>
+  </div>
+</main>
+<script>
+// pipeline
+const nodes=[...document.querySelectorAll('.node')];
+function select(i){nodes.forEach((n,k)=>{n.classList.toggle('on',k===i);document.getElementById('d'+k).classList.toggle('on',k===i)})}
+nodes.forEach(n=>n.addEventListener('click',()=>{stop();select(+n.dataset.i)}));
+let timer=null;
+function stop(){if(timer){clearInterval(timer);timer=null;document.getElementById('play').textContent='▶ Play the loop'}}
+document.getElementById('play').onclick=()=>{
+  if(timer){stop();return}
+  let i=0;select(0);document.getElementById('play').textContent='❚❚ Pause';
+  timer=setInterval(()=>{i=(i+1)%nodes.length;select(i)},2200);
+};
+document.getElementById('reset').onclick=()=>{stop();select(-1)};
+// simulator (illustrative)
+const cases=[
+ {q:'How do I reset my API token?',s:0.91,llm:true},
+ {q:'Which endpoint lists invoices?',s:0.82,llm:true},
+ {q:'Refund policy for annual plans',s:0.74,llm:true},
+ {q:'Correct answer, very different wording',s:0.66,llm:true},
+ {q:'Partially correct, missing a step',s:0.58,llm:false},
+ {q:'Wrong number, confident tone ⚠',s:0.87,llm:false}
+];
+const thr=document.getElementById('thr'),judge=document.getElementById('judge');
+function render(){
+  const t=+thr.value,j=judge.checked;document.getElementById('thrv').textContent=t.toFixed(2);
+  let pass=0;
+  document.getElementById('sim').innerHTML=cases.map(c=>{const ok=c.s>=t&&(!j||c.llm);if(ok)pass++;
+    const thumb=j?(c.llm?' 👍':' 👎'):'';
+    return `<div class="sim-row"><span>${c.q}</span><span class="mono">${c.s.toFixed(2)}${thumb} <span class="pill ${ok?'pass':'fail'}">${ok?'pass':'fail'}</span></span></div>`}).join('');
+  const r=Math.round(pass/cases.length*100);
+  document.getElementById('bar').style.width=r+'%';
+  document.getElementById('rate').textContent=`Pass rate ${r}%`;
+}
+thr.addEventListener('input',render);judge.addEventListener('change',render);render();
+// tabs
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id===t.dataset.p));
+});
+// mapping filter
+const rows=[...document.querySelectorAll('#map .row')];
+function counts(){const c={same:0,part:0,mine:0,ace:0};rows.forEach(r=>c[r.dataset.k]++);
+ document.getElementById('mapcount').textContent=`${c.same} same idea · ${c.part} partial · ${c.mine} only in VERA · ${c.ace} only in ACE`;}
+counts();
+document.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{
+  document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===ch));
+  rows.forEach(r=>r.classList.toggle('hide',ch.dataset.f!=='all'&&r.dataset.k!==ch.dataset.f));
+});
+// progress
+addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('prog').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'});
+</script>
+</body>
+</html>
